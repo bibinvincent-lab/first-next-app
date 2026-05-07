@@ -91,7 +91,7 @@ export default function HomePage() {
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center' }}>
             <Button
               component={Link}
-              href="/blog"
+              href="/blog2"
               variant="contained"
               sx={{
                 bgcolor: 'purple',
@@ -231,7 +231,7 @@ export default function HomePage() {
           <Box sx={{ textAlign: 'center', mt: 6 }}>
             <Button
               component={Link}
-              href="/blog"
+              href="/blog2"
               variant="outlined"
               sx={{
                 bgcolor: 'grey.100',
@@ -318,7 +318,7 @@ export default function HomePage() {
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center' }}>
             <Button
               component={Link}
-              href="/blog"
+              href="/blog2"
               variant="contained"
               sx={{
                 bgcolor: 'purple',
@@ -337,24 +337,7 @@ export default function HomePage() {
             >
               Start Reading
             </Button>
-            {/* <Button
-              variant="outlined"
-              sx={{
-                color: 'white',
-                borderColor: 'white',
-                fontWeight: 'semibold',
-                borderRadius: '9999px',
-                px: 4,
-                py: 2,
-                '&:hover': {
-                  bgcolor: 'white',
-                  color: 'blue.600',
-                },
-                transition: 'all 0.2s',
-              }}
-            >
-              Subscribe to Newsletter
-            </Button> */}
+
           </Box>
         </Box>
       </Box>
