@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
-import { useAuth } from '@/app/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,7 +25,7 @@ export default function Navbar() {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { isAuthenticated, isLoading, logout } = useAuth();
+  const { isAuthenticated, isLoading, logout, user } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -37,6 +37,20 @@ export default function Navbar() {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const getDashboardLink = () => {
+    if (!user) return '/login';
+    switch (user.role) {
+      case 'admin':
+        return '/admin/dashboard';
+      case 'manager':
+        return '/manager/dashboard';
+      case 'user':
+        return '/user/dashboard';
+      default:
+        return '/user/dashboard';
+    }
   };
 
   return (
@@ -106,7 +120,7 @@ export default function Navbar() {
             {!isAuthenticated ? (
               <Button
                 component={Link}
-                href="/signup"
+                href="/login"
                 variant="contained"
                 sx={{
                   bgcolor: 'linear-gradient(45deg, #2563eb 30%, #9333ea 90%)',
@@ -119,6 +133,18 @@ export default function Navbar() {
               </Button>
             ) : (
               <>
+                <Button
+                  component={Link}
+                  href={getDashboardLink()}
+                  variant="outlined"
+                  sx={{
+                    borderColor: 'primary.main',
+                    color: 'primary.main',
+                    '&:hover': { borderColor: 'primary.dark', color: 'primary.dark' },
+                  }}
+                >
+                  Dashboard
+                </Button>
                 <Button
                   onClick={handleLogout}
                   variant="contained"
@@ -183,7 +209,7 @@ export default function Navbar() {
             {!isAuthenticated ? (
               <Button
                 component={Link}
-                href="/signup"
+                href="/login"
                 variant="contained"
                 sx={{
                   bgcolor: 'linear-gradient(45deg, #2563eb 30%, #9333ea 90%)',

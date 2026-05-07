@@ -11,10 +11,9 @@ import Grid from '@mui/material/Grid';
 export default async function BlogPage({ params }) {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("sessionToken");
-  const userEmail = cookieStore.get("userEmail");
 
-  if (!sessionToken || !userEmail) {
-    redirect("/signup");
+  if (!sessionToken) {
+    redirect("/login");
   }
 
   const { slug } = await params;

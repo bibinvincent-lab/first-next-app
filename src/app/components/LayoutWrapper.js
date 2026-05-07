@@ -8,7 +8,7 @@ import Footer from "./Footer";
 export default function LayoutWrapper({ children }) {
   const pathname = usePathname();
 
-  const hideLayout = ["/register", "/signup"].includes(pathname);
+  const hideLayout = ["/register", "/login"].includes(pathname);
 
   return (
     <Box

@@ -16,10 +16,9 @@ import {
 export default async function BlogListPage() {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("sessionToken");
-  const userEmail = cookieStore.get("userEmail");
 
-  if (!sessionToken || !userEmail) {
-    redirect("/signup");
+  if (!sessionToken) {
+    redirect("/login");
   }
 
   return (

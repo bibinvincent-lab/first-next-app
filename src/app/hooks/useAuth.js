@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+"use client";
+import { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 
 export function useAuth() {
@@ -72,7 +73,7 @@ export function useAuth() {
 
       setIsAuthenticated(false);
       setUser(null);
-      router.push("/signup");
+      router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
@@ -82,7 +83,7 @@ export function useAuth() {
 
   const requireAuth = useCallback(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/signup");
+      router.push("/login");
     }
   }, [isAuthenticated, isLoading, router]);
 

@@ -88,7 +88,7 @@ export default function RegisterPage() {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
-      setTimeout(() => router.push("/signup"), 1200);
+      setTimeout(() => router.push("/login"), 1200);
     } catch (err) {
       setError(err.message || "Registration failed.");
     } finally {
@@ -156,7 +156,7 @@ export default function RegisterPage() {
             <Typography variant="body2" sx={{ mb: 1 }}>
               Already have an account?
             </Typography>
-            <Link href="/signup" underline="hover">
+            <Link href="/login" underline="hover">
               Sign in
             </Link>
           </Box>

@@ -57,7 +57,7 @@ export default function ClippedDrawer({ children }) {
     { text: "Home", href: "/" },
     { text: "User List", href: "/test" },
     { text: "Add User", href: "/add" },
-    { text: "Sign In", href: "/signup" },
+    { text: "Sign In", href: "/login" },
     { text: "Blog", href: "/blog" },
   ].map((item, index) => (
     <ListItem key={item.text} disablePadding>

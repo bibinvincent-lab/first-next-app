@@ -1,21 +1,6 @@
 import { createConnection } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
-
-const hashPassword = (password) => {
-  return crypto.createHash('sha256').update(password).digest('hex');
-};
-
-const ensureAuthTable = async (db) => {
-  await db.execute(
-    `CREATE TABLE IF NOT EXISTS auth_users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      email VARCHAR(255) UNIQUE NOT NULL,
-      password_hash VARCHAR(255) NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`
-  );
-};
+import bcrypt from 'bcryptjs';
 
 export async function POST(req) {
   try {
@@ -28,24 +13,42 @@ export async function POST(req) {
       );
     }
 
-    const db = await createConnection();
-    await ensureAuthTable(db);
+    const connection = await createConnection();
 
-    const [existingUsers] = await db.query('SELECT id FROM auth_users WHERE email = ?', [email]);
-    if (existingUsers.length > 0) {
-      return NextResponse.json(
-        { success: false, message: 'A user with this email already exists' },
-        { status: 409 }
+    try {
+      // Check if user already exists
+      const [existingUsers] = await connection.execute('SELECT id FROM users WHERE email = ?', [email]);
+      if (existingUsers.length > 0) {
+        return NextResponse.json(
+          { success: false, message: 'A user with this email already exists' },
+          { status: 409 }
+        );
+      }
+
+      // Hash password with bcrypt
+      const saltRounds = 10;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+
+      // Create user with default role 'user'
+      await connection.execute(
+        'INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)',
+        [email, passwordHash, 'user']
       );
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Registration successful',
+        user: { email, role: 'user' }
+      });
+    } finally {
+      if (connection) {
+        connection.release();
+      }
     }
-
-    const passwordHash = hashPassword(password);
-    await db.execute('INSERT INTO auth_users (email, password_hash) VALUES (?, ?)', [email, passwordHash]);
-
-    return NextResponse.json({ success: true, message: 'Registration successful' });
   } catch (error) {
+    console.error('Registration error:', error);
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: 'Registration failed' },
       { status: 500 }
     );
   }

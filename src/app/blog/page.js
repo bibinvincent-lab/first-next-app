@@ -1,8 +1,8 @@
 
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+'use client';
 import Link from "next/link";
 import { posts } from "@/lib/posts";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Box,
   Typography,
@@ -11,15 +11,26 @@ import {
   CardContent,
   CardMedia,
   Avatar,
+  Container,
+  CircularProgress,
 } from '@mui/material';
 
-export default async function BlogListPage() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("sessionToken");
-  const userEmail = cookieStore.get("userEmail");
+export default function BlogListPage() {
+  const { isAuthenticated, isLoading, requireAuth } = useAuth();
 
-  if (!sessionToken || !userEmail) {
-    redirect("/signup");
+  // Redirect to login if not authenticated
+  requireAuth();
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will be redirected by requireAuth()
   }
 
   return (

@@ -1,7 +1,7 @@
 "use client";
-
 import Link from "next/link";
 import { posts } from "@/lib/posts";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Box,
   Typography,
@@ -13,6 +13,10 @@ import {
 } from '@mui/material';
 
 export default function BlogListPage() {
+  const { requireAuth } = useAuth();
+  
+  // Redirect to login if not authenticated
+  requireAuth();
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 6 }}>
       

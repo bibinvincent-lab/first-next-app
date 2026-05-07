@@ -1,17 +1,27 @@
 // src/lib/db.js
 import mysql from "mysql2/promise";
 
-let connection; // single variable to store the connection
+// Create connection pool for better performance and reliability
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
+// Get connection from pool
 export const createConnection = async () => {
-  if (!connection) {
-    connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-    });
-    console.log("Connected to MySQL!");
+  try {
+    const connection = await pool.getConnection();
+    return connection;
+  } catch (error) {
+    console.error('Database connection error:', error);
+    throw error;
   }
-  return connection;
 };
+
+// For backward compatibility, also export pool directly
+export { pool };

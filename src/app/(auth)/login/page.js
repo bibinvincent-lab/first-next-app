@@ -17,7 +17,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useAuth } from "@/app/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
   minHeight: "100vh",
@@ -69,9 +69,7 @@ export default function SignIn() {
     }
 
     const result = await login(email, password);
-    if (result.success) {
-      router.push("/");
-    } else {
+    if (!result.success) {
       setError(result.message || "Login failed");
     }
   };
