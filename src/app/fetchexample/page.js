@@ -8,13 +8,22 @@ export default function UsersSection() {
 
   // ✅ FETCH DATA
   useEffect(() => {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then((res) => res.json())
+    fetch("/api/users")
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
-        setUsers(data);
+        if (data.users && Array.isArray(data.users)) {
+          setUsers(data.users);
+        } else {
+          setIsError(true);
+        }
       })
       .catch((err) => {
-        console.error(err);
+        console.error("Failed to fetch users:", err);
         setIsError(true);
       });
   }, []);
@@ -78,13 +87,17 @@ export default function UsersSection() {
                     </Grid>
                   ) : (
                     users.map((user) => (
-                      <Grid size={{ xs: 12, sm: 6, md: 4 }} key={user.id}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }} key={user.rollno}>
                         <Paper sx={{ p: 3 }}>
-                          <Box display="flex" justifyContent="space-between">
-                            <Typography>{user.name}</Typography>
-                            <Avatar>{user.name.charAt(0)}</Avatar>
+                          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                            <Typography variant="h6">{user.name}</Typography>
+                            <Avatar sx={{ bgcolor: 'primary.main' }}>
+                              {user.name.charAt(0).toUpperCase()}
+                            </Avatar>
                           </Box>
-                          <Typography>{user.email}</Typography>
+                          <Typography variant="body2" color="text.secondary">{user.email}</Typography>
+                          <Typography variant="body2" color="text.secondary">{user.phoneno}</Typography>
+                          <Typography variant="body2">Age: {user.age}</Typography>
                         </Paper>
                       </Grid>
                     ))

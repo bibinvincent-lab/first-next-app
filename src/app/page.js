@@ -91,7 +91,7 @@ export default function HomePage() {
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center' }}>
             <Button
               component={Link}
-              href="/blog2"
+              href="/blog"
               variant="contained"
               sx={{
                 bgcolor: 'purple',
@@ -231,7 +231,7 @@ export default function HomePage() {
           <Box sx={{ textAlign: 'center', mt: 6 }}>
             <Button
               component={Link}
-              href="/blog2"
+              href="/blog"
               variant="outlined"
               sx={{
                 bgcolor: 'grey.100',
@@ -256,7 +256,7 @@ export default function HomePage() {
       {/* <Box sx={{ py: 8, bgcolor: 'grey.50' }}>
         <Box sx={{ maxWidth: 'lg', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 } }}>
           <Grid container spacing={4}>
-            <Grid item xs={6} md={3}>
+            <Grid size={{ xs: 6, md: 3 }}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h2" sx={{ fontWeight: 'bold', color: 'blue.600', mb: 1 }}>
                   500+
@@ -266,7 +266,7 @@ export default function HomePage() {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid size={{ xs: 6, md: 3 }}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h2" sx={{ fontWeight: 'bold', color: 'purple.600', mb: 1 }}>
                   10K+
@@ -276,7 +276,7 @@ export default function HomePage() {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid size={{ xs: 6, md: 3 }}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h2" sx={{ fontWeight: 'bold', color: 'green.600', mb: 1 }}>
                   50+
@@ -286,7 +286,7 @@ export default function HomePage() {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={6} md={3}>
+            <Grid size={{ xs: 6, md: 3 }}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h2" sx={{ fontWeight: 'bold', color: 'orange.600', mb: 1 }}>
                   99%
@@ -318,7 +318,7 @@ export default function HomePage() {
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, justifyContent: 'center' }}>
             <Button
               component={Link}
-              href="/blog2"
+              href="/blog"
               variant="contained"
               sx={{
                 bgcolor: 'purple',

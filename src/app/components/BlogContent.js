@@ -1,7 +1,78 @@
 "use client";
 import { Box } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { sanitizeHTML } from '@/lib/sanitizer';
 
 export default function BlogContent({ content }) {
+  const [sanitizedContent, setSanitizedContent] = useState('');
+  const [DOMPurify, setDOMPurify] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Dynamic import to avoid SSR issues
+    const loadDOMPurify = async () => {
+      try {
+        const module = await import('dompurify');
+        if (module.default && typeof module.default.sanitize === 'function') {
+          setDOMPurify(module.default);
+        } else {
+          throw new Error('DOMPurify sanitize function not available');
+        }
+      } catch (err) {
+        console.error('Failed to load DOMPurify:', err);
+        // Don't set error - we'll use fallback sanitizer
+        console.log('Using fallback HTML sanitizer');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDOMPurify();
+  }, []);
+
+  useEffect(() => {
+    if (content) {
+      if (DOMPurify && typeof DOMPurify.sanitize === 'function') {
+        try {
+          // Use DOMPurify for comprehensive sanitization
+          const sanitized = DOMPurify.sanitize(content, {
+            ALLOWED_TAGS: [
+              'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+              'p', 'br', 'strong', 'em', 'u', 'i', 'b',
+              'ul', 'ol', 'li',
+              'blockquote',
+              'code', 'pre',
+              'a',
+              'img',
+              'table', 'thead', 'tbody', 'tr', 'th', 'td'
+            ],
+            ALLOWED_ATTR: ['href', 'src', 'alt', 'title'],
+            ALLOW_DATA_ATTR: false
+          });
+          setSanitizedContent(sanitized);
+        } catch (err) {
+          console.error('DOMPurify failed, using fallback:', err);
+          // Fallback to our custom sanitizer
+          setSanitizedContent(sanitizeHTML(content));
+        }
+      } else {
+        // Use our custom fallback sanitizer
+        setSanitizedContent(sanitizeHTML(content));
+      }
+    }
+  }, [DOMPurify, content]);
+
+  // Show loading state while DOMPurify is loading
+  if (isLoading) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        Loading content...
+      </Box>
+    );
+  }
+
+  
   return (
     <Box
       component="article"
@@ -118,7 +189,7 @@ export default function BlogContent({ content }) {
     >
       <div
         className="blog-content"
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
       />
     </Box>
   );

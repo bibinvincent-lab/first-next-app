@@ -1,8 +1,22 @@
 import { createConnection } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { checkRateLimit, logRateLimitViolation } from '@/lib/rateLimit';
 
 export async function POST(req) {
+  // Check rate limit first
+  const rateLimitResult = await checkRateLimit(req, 'REGISTER');
+  if (!rateLimitResult.allowed) {
+    if (rateLimitResult.blocked) {
+      // Log the violation
+      const clientId = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
+      await logRateLimitViolation(req, 'REGISTER', clientId);
+    }
+    return NextResponse.json(
+      { success: false, message: rateLimitResult.message },
+      { status: 429 }
+    );
+  }
   try {
     const { email, password } = await req.json();
 

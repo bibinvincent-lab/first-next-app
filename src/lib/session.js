@@ -3,9 +3,10 @@ import { randomBytes } from 'crypto';
 
 // Session configuration
 export const SESSION_CONFIG = {
-  EXPIRY_MINUTES: 5, // Session expires after 5 minutes
-  INACTIVITY_MINUTES: 10, // Session expires after 10 minutes of inactivity
+  EXPIRY_MINUTES: 30, // Session expires after 30 minutes
+  INACTIVITY_MINUTES: 15, // Session expires after 15 minutes of inactivity
   TOKEN_LENGTH: 64, // Length of session token
+  MAX_CONCURRENT_SESSIONS: 3, // Maximum concurrent sessions per user
 };
 
 // Generate secure random session token

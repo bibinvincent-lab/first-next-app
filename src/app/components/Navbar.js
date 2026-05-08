@@ -95,7 +95,7 @@ export default function Navbar() {
             <Button component={Link} href="/" sx={{ color: 'grey.600', '&:hover': { color: 'grey.900' } }}>
               Home
             </Button>
-            <Button component={Link} href="/blog2" sx={{ color: 'grey.600', '&:hover': { color: 'grey.900' } }}>
+            <Button component={Link} href="/blog" sx={{ color: 'grey.600', '&:hover': { color: 'grey.900' } }}>
               Blog
             </Button>
             

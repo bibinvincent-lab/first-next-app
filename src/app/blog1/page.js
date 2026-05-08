@@ -63,7 +63,7 @@ export default async function BlogListPage() {
       {/* Blog Grid */}
       <Grid container spacing={4}>
         {posts.map((post) => (
-          <Grid item xs={12} md={6} lg={4} key={post.slug}>
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={post.slug}>
             <Card
               component={Link}
               href={`/blog/${post.slug}`}

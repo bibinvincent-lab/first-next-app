@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { validateSessionEdge } from '@/lib/edgeSession';
 
-export function middleware(request) {
+export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // Get session token from cookies
@@ -16,8 +17,11 @@ export function middleware(request) {
 
   // If user is already authenticated, redirect from login/register to appropriate dashboard
   if (sessionToken && (pathname === '/login' || pathname === '/register')) {
-    // For now, redirect to user dashboard as default
-    return NextResponse.redirect(new URL('/user/dashboard', request.url));
+    // Validate session before redirecting
+    const isValidSession = await validateSessionEdge(sessionToken);
+    if (isValidSession) {
+      return NextResponse.redirect(new URL('/user/dashboard', request.url));
+    }
   }
 
   // Protected routes - check for session token
@@ -37,15 +41,24 @@ export function middleware(request) {
     return pathname === route;
   });
 
-  // If accessing protected route without session token, redirect to login
-  if (isProtectedRoute && !sessionToken) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+  // If accessing protected route, validate session
+  if (isProtectedRoute) {
+    if (!sessionToken) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Validate session token using Edge-compatible validation
+    const isValidSession = await validateSessionEdge(sessionToken);
+    if (!isValidSession) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      loginUrl.searchParams.set('reason', 'session_expired');
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
-  // Allow access to protected routes if session token exists
-  // Note: Actual session validation happens in the API routes
   return NextResponse.next();
 }
 

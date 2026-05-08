@@ -7,8 +7,22 @@ import {
   cleanExpiredSessions,
   SESSION_CONFIG 
 } from '@/lib/session';
+import { checkRateLimit, logRateLimitViolation } from '@/lib/rateLimit';
 
 export async function POST(req) {
+  // Check rate limit first
+  const rateLimitResult = await checkRateLimit(req, 'LOGIN');
+  if (!rateLimitResult.allowed) {
+    if (rateLimitResult.blocked) {
+      // Log the violation
+      const clientId = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
+      await logRateLimitViolation(req, 'LOGIN', clientId);
+    }
+    return NextResponse.json(
+      { success: false, message: rateLimitResult.message },
+      { status: 429 }
+    );
+  }
   try {
     const { email, password } = await req.json();
 
@@ -25,29 +39,32 @@ export async function POST(req) {
       // Clean expired sessions
       await cleanExpiredSessions(connection);
 
-      // Find user with role
+      // Always perform user lookup to prevent timing attacks
       const [users] = await connection.execute(
         'SELECT id, email, password_hash, role FROM users WHERE email = ?',
         [email]
       );
 
-    if (users.length === 0) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
+      // Constant-time response regardless of user existence
+      if (users.length === 0) {
+        // Simulate bcrypt comparison timing
+        await bcrypt.compare(password, '$2b$10$dummyhashfordummyuserdummyhashfordummyuser');
+        return NextResponse.json(
+          { success: false, message: 'Invalid credentials' },
+          { status: 401 }
+        );
+      }
 
-    const user = users[0];
+      const user = users[0];
 
-    // Verify password with bcrypt
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
+      // Verify password with bcrypt
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
+      if (!isValidPassword) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid credentials' },
+          { status: 401 }
+        );
+      }
 
     // Delete all previous sessions for this user (one device login only)
     await connection.execute(
@@ -75,15 +92,15 @@ export async function POST(req) {
       redirectTo: getRedirectPath(user.role)
     });
 
-    // console.log('DEBUG: Setting sessionToken cookie:', sessionToken);
+
     response.cookies.set('sessionToken', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: SESSION_CONFIG.EXPIRY_MINUTES * 60,
       path: '/',
     });
-    // console.log('DEBUG: SessionToken cookie set successfully');
+
 
     return response;
     } finally {
