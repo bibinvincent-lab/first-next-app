@@ -27,8 +27,11 @@ export default function ContactPage() {
   const [status, setStatus] = useState("idle");
 
   useEffect(() => {
-    requireAuth();
-  }, [isAuthenticated, isLoading, requireAuth]);
+    if (!isLoading) {
+      const authorized = requireAuth();
+      // Only show form if authorized (no redirect happened)
+    }
+  }, [isLoading, requireAuth]);
 
   const handleChange = (e) => {
     setFormState({ ...formState, [e.target.name]: e.target.value });

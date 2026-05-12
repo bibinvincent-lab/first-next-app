@@ -8,6 +8,11 @@ import {
   SESSION_CONFIG 
 } from '@/lib/session';
 import { checkRateLimit, logRateLimitViolation } from '@/lib/rateLimit';
+import { 
+  generateDeviceFingerprint, 
+  registerUserDevice,
+  logSecurityEvent 
+} from '@/lib/security';
 
 export async function POST(req) {
   // Check rate limit first
@@ -66,20 +71,37 @@ export async function POST(req) {
         );
       }
 
+    // Generate device fingerprint
+    const deviceFingerprint = generateDeviceFingerprint(req);
+    const ipAddress = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+
     // Delete all previous sessions for this user (one device login only)
     await connection.execute(
       'DELETE FROM user_sessions WHERE user_id = ?',
       [user.id]
     );
 
-    // Create new session
+    // Create new session with device binding
     const sessionToken = generateSessionToken();
     const expiresAt = calculateSessionExpiry();
 
     await connection.execute(
-      'INSERT INTO user_sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)',
-      [user.id, sessionToken, expiresAt]
+      'INSERT INTO user_sessions (user_id, session_token, expires_at, device_fingerprint, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+      [user.id, sessionToken, expiresAt, deviceFingerprint, ipAddress, userAgent]
     );
+
+    // Register device for tracking
+    const deviceInfo = {
+      deviceName: `${req.headers.get('sec-ch-ua-platform') || 'Unknown'} - ${req.headers.get('sec-ch-ua')?.split(',')[0] || 'Unknown Browser'}`,
+      deviceType: 'web',
+      browser: req.headers.get('sec-ch-ua')?.split(',')[0] || 'Unknown',
+      platform: req.headers.get('sec-ch-ua-platform') || 'Unknown',
+      ipAddress,
+      userAgent
+    };
+    
+    await registerUserDevice(user.id, deviceFingerprint, deviceInfo);
 
     // Set secure httpOnly cookie
     const response = NextResponse.json({

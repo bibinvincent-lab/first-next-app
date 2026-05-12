@@ -1,11 +1,17 @@
 import { createConnection } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
+
 import { 
   isSessionExpired, 
   isSessionInactive,
   cleanExpiredSessions 
 } from '@/lib/session';
+import { 
+  validateSessionDevice,
+  generateDeviceFingerprint,
+  logSecurityEvent 
+} from '@/lib/security';
 
 export async function GET() {
   try {
@@ -24,6 +30,37 @@ export async function GET() {
     try {
       // Clean expired sessions
       await cleanExpiredSessions(connection);
+
+      // Get request headers for device validation
+      const headersList = await headers();
+      const requestHeaders = {};
+      headersList.forEach((value, key) => {
+        requestHeaders[key] = value;
+      });
+
+      // Create mock request object for device validation
+      const mockReq = {
+        headers: {
+          get: (headerName) => requestHeaders[headerName.toLowerCase()] || null
+        },
+        ip: requestHeaders['x-forwarded-for'] || requestHeaders['x-real-ip'] || 'unknown'
+      };
+
+      // Validate device first
+      const deviceValidation = await validateSessionDevice(sessionToken, mockReq);
+
+      if (!deviceValidation.valid) {
+        // Log security event and remove compromised session
+        await connection.execute(
+          'DELETE FROM user_sessions WHERE session_token = ?',
+          [sessionToken]
+        );
+        
+        return NextResponse.json(
+          { authenticated: false, message: 'Session invalid - possible security breach' },
+          { status: 200 }
+        );
+      }
 
       // Find session in database
       const [sessions] = await connection.execute(

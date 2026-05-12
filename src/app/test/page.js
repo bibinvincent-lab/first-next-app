@@ -17,8 +17,11 @@ export default function TestPage() {
   const { isAuthenticated, isLoading, requireAuth } = useAuth();
 
   useEffect(() => {
-    requireAuth();
-  }, [isAuthenticated, isLoading, requireAuth]);
+    if (!isLoading) {
+      const authorized = requireAuth();
+      // Only show content if authorized (no redirect happened)
+    }
+  }, [isLoading, requireAuth]);
 
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);

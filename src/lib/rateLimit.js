@@ -15,7 +15,7 @@ export const RATE_LIMIT_CONFIG = {
   },
   GENERAL: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxAttempts: 100, // 100 requests per window
+    maxAttempts: 200, // 100 requests per window
     blockDurationMs: 5 * 60 * 1000, // 5 minutes block
   }
 };

@@ -1,6 +1,7 @@
 // src/app/admin/dashboard/page.js
 'use client';
 import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useState } from 'react';
 import {
   Box,
   Container,
@@ -10,6 +11,7 @@ import {
   CardContent,
   Button,
   Paper,
+  CircularProgress,
 } from '@mui/material';
 import {
   People,
@@ -19,9 +21,29 @@ import {
 } from '@mui/icons-material';
 
 export default function AdminDashboard() {
-  const { user, requireRole } = useAuth();
+  const { user, requireRole, isLoading } = useAuth();
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
-  requireRole('admin');
+  useEffect(() => {
+    if (!isLoading) {
+      const authorized = requireRole('admin');
+      setIsAuthorized(authorized);
+    }
+  }, [isLoading, requireRole]);
+
+  // Show loading state while checking authorization
+  if (isLoading || !isAuthorized) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 8 }}>
+        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="60vh">
+          <CircularProgress size={60} sx={{ mb: 2 }} />
+          <Typography variant="h6" color="text.secondary">
+            Checking authorization...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
 
   if (!user || user.role !== 'admin') {
     return (

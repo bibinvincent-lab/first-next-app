@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from 'react';
 import Link from "next/link";
 import { posts } from "@/lib/posts";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,13 +11,33 @@ import {
   CardContent,
   CardMedia,
   Avatar,
+  CircularProgress,
 } from '@mui/material';
 
 export default function BlogListPage() {
-  const { requireAuth } = useAuth();
-  
-  // Redirect to login if not authenticated
-  requireAuth();
+  const { requireAuth, isLoading } = useAuth();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      const authorized = requireAuth();
+      setIsAuthorized(authorized);
+    }
+  }, [isLoading, requireAuth]);
+
+  // Show loading state while checking authorization
+  if (isLoading || !isAuthorized) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh' 
+      }}>
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 6 }}>
       
