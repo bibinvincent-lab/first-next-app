@@ -26,44 +26,48 @@ export function generateDeviceFingerprint(req) {
 
 // Log security event
 export async function logSecurityEvent(eventType, severity, userId, ipAddress, userAgent, description, metadata = null) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     await connection.execute(
       `INSERT INTO security_events (event_type, severity, user_id, ip_address, user_agent, description, metadata) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [eventType, severity, userId, ipAddress, userAgent, description, metadata ? JSON.stringify(metadata) : null]
     );
-    connection.release();
   } catch (error) {
     console.error('Failed to log security event:', error);
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 // Log failed login attempt
 export async function logFailedLogin(email, ipAddress, userAgent, reason) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     await connection.execute(
       'INSERT INTO failed_login_attempts (email, ip_address, user_agent, reason) VALUES (?, ?, ?, ?)',
       [email, ipAddress, userAgent, reason]
     );
-    connection.release();
   } catch (error) {
     console.error('Failed to log failed login:', error);
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 // Check if user is locked due to too many failed attempts
 export async function isUserLocked(email) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     const [attempts] = await connection.execute(
       `SELECT COUNT(*) as count, MAX(attempt_time) as last_attempt 
        FROM failed_login_attempts 
        WHERE email = ? AND attempt_time > DATE_SUB(NOW(), INTERVAL 15 MINUTE)`,
       [email]
     );
-    connection.release();
 
     if (attempts[0].count >= 5) {
       return { locked: true, until: attempts[0].last_attempt };
@@ -72,13 +76,16 @@ export async function isUserLocked(email) {
   } catch (error) {
     console.error('Failed to check user lock status:', error);
     return { locked: false };
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 // Register user device
 export async function registerUserDevice(userId, deviceFingerprint, deviceInfo) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     await connection.execute(
       `INSERT INTO user_devices (user_id, device_fingerprint, device_name, device_type, browser, platform, ip_address, user_agent) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
@@ -97,16 +104,18 @@ export async function registerUserDevice(userId, deviceFingerprint, deviceInfo) 
         deviceInfo.userAgent || 'Unknown'
       ]
     );
-    connection.release();
   } catch (error) {
     console.error('Failed to register user device:', error);
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 // Validate session device
 export async function validateSessionDevice(sessionToken, req) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     const [sessions] = await connection.execute(
       `SELECT s.user_id, s.device_fingerprint, u.email 
        FROM user_sessions s 
@@ -116,7 +125,6 @@ export async function validateSessionDevice(sessionToken, req) {
     );
 
     if (sessions.length === 0) {
-      connection.release();
       return { valid: false, reason: 'Session not found or inactive' };
     }
 
@@ -124,7 +132,6 @@ export async function validateSessionDevice(sessionToken, req) {
     const currentFingerprint = generateDeviceFingerprint(req);
 
     if (session.device_fingerprint && session.device_fingerprint !== currentFingerprint) {
-      // Log security event for suspicious activity
       await logSecurityEvent(
         'session_device_mismatch',
         'high',
@@ -135,69 +142,75 @@ export async function validateSessionDevice(sessionToken, req) {
         { expected_fingerprint: session.device_fingerprint, current_fingerprint }
       );
 
-      connection.release();
       return { valid: false, reason: 'Device fingerprint mismatch' };
     }
 
-    connection.release();
     return { valid: true };
   } catch (error) {
     console.error('Failed to validate session device:', error);
     return { valid: false, reason: 'Validation error' };
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 // Update user login tracking
 export async function updateUserLogin(userId, ipAddress, userAgent) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     await connection.execute(
       'UPDATE users SET last_login = NOW(), login_attempts = 0 WHERE id = ?',
       [userId]
     );
-    connection.release();
   } catch (error) {
     console.error('Failed to update user login:', error);
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 // Increment failed login attempts
 export async function incrementFailedLoginAttempts(email) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     await connection.execute(
       'UPDATE users SET login_attempts = login_attempts + 1 WHERE email = ?',
       [email]
     );
-    connection.release();
   } catch (error) {
     console.error('Failed to increment failed login attempts:', error);
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 // Lock user account
 export async function lockUserAccount(email, durationMinutes = 30) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     await connection.execute(
       'UPDATE users SET locked_until = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE email = ?',
       [durationMinutes, email]
     );
-    connection.release();
   } catch (error) {
     console.error('Failed to lock user account:', error);
+  } finally {
+    if (connection) connection.release();
   }
 }
 
 // Check if user account is locked
 export async function isAccountLocked(email) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     const [users] = await connection.execute(
       'SELECT locked_until FROM users WHERE email = ?',
       [email]
     );
-    connection.release();
 
     if (users.length === 0) {
       return { locked: false };
@@ -212,6 +225,8 @@ export async function isAccountLocked(email) {
   } catch (error) {
     console.error('Failed to check account lock status:', error);
     return { locked: false };
+  } finally {
+    if (connection) connection.release();
   }
 }
 

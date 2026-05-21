@@ -10,7 +10,7 @@ import {
 import CircularProgress from "@mui/material/CircularProgress";
 import EditUserModal from "./components/EditUserModal";
 import { useSearchParams } from "next/navigation";
-import { useAuth } from "@/app/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function TestPage() {
   const router = useRouter();

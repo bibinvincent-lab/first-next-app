@@ -11,7 +11,9 @@ import {
   TableRow,
   Button,
   Pagination,
-  Box
+  Box,
+  CircularProgress,
+  Typography,
 } from "@mui/material";
 
 import Dialog from '@mui/material/Dialog';
@@ -19,7 +21,16 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import { useAuth } from '@/hooks/useAuth';
+
 export default function TablePage() {
+  const { isAuthenticated, isLoading, requireAuth } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      requireAuth();
+    }
+  }, [isLoading, requireAuth]);
   const [formData, setFormData] = useState({
     rollno: "",
     name: "",
@@ -152,6 +163,15 @@ export default function TablePage() {
       console.error("Failed to delete:", err);
     }
   };
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress aria-label="Loading…" />
+        <Typography sx={{ ml: 2 }}>Loading...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ maxWidth: 900, margin: "auto", mt: 5 }}>

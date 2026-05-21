@@ -97,8 +97,9 @@ export async function checkRateLimit(req, type = 'GENERAL') {
 
 // Log rate limit violations for monitoring
 export async function logRateLimitViolation(req, type, clientId) {
+  let connection;
   try {
-    const connection = await createConnection();
+    connection = await createConnection();
     await connection.execute(
       'INSERT INTO rate_limit_logs (client_id, endpoint, ip_address, user_agent, created_at) VALUES (?, ?, ?, ?, NOW())',
       [
@@ -108,9 +109,9 @@ export async function logRateLimitViolation(req, type, clientId) {
         req.headers.get('user-agent') || ''
       ]
     );
-    connection.release();
   } catch (error) {
-    // Fail silently for logging
     console.error('Failed to log rate limit violation');
+  } finally {
+    if (connection) connection.release();
   }
 }

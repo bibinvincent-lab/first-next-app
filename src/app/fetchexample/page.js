@@ -1,13 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Box, Typography, Grid, Paper, Chip, Avatar } from "@mui/material";
+import { Box, Typography, Grid, Paper, Chip, Avatar, CircularProgress } from "@mui/material";
+import { useAuth } from '@/hooks/useAuth';
 
 export default function UsersSection() {
+  const { isAuthenticated, isLoading: authLoading, requireAuth } = useAuth();
   const [users, setUsers] = useState([]);
   const [isError, setIsError] = useState(false);
 
-  // ✅ FETCH DATA
   useEffect(() => {
+    if (!authLoading) {
+      requireAuth();
+    }
+  }, [authLoading, requireAuth]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
     fetch("/api/users")
       .then((res) => {
         if (!res.ok) {
@@ -26,7 +34,15 @@ export default function UsersSection() {
         console.error("Failed to fetch users:", err);
         setIsError(true);
       });
-  }, []);
+  }, [isAuthenticated]);
+
+  if (authLoading || !isAuthenticated) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress aria-label="Loading…" />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc", py: 8 }}>

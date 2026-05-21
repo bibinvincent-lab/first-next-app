@@ -1,5 +1,4 @@
 // src/lib/validation.js
-import DOMPurify from 'dompurify';
 
 // Email validation regex (RFC 5322 compliant)
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -128,31 +127,13 @@ export function validateAge(age) {
   return { valid: true, sanitized: numAge };
 }
 
-// Sanitize HTML content
-export function sanitizeHtml(content, allowedTags = null, allowedAttrs = null) {
+// Sanitize HTML content (strips all HTML tags for server-side safety)
+export function sanitizeHtml(content) {
   if (!content || typeof content !== 'string') {
     return '';
   }
 
-  const config = {
-    ALLOWED_TAGS: allowedTags || [
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'p', 'br', 'strong', 'em', 'u', 'i', 'b',
-      'ul', 'ol', 'li',
-      'blockquote',
-      'code', 'pre',
-      'a',
-      'img',
-      'table', 'thead', 'tbody', 'tr', 'th', 'td'
-    ],
-    ALLOWED_ATTR: allowedAttrs || ['href', 'src', 'alt', 'title'],
-    ALLOW_DATA_ATTR: false,
-    ALLOW_UNKNOWN_PROTOCOLS: false,
-    RETURN_DOM: false,
-    RETURN_DOM_FRAGMENT: false
-  };
-
-  return DOMPurify.sanitize(content, config);
+  return content.replace(/<[^>]*>/g, '');
 }
 
 // Validate and sanitize user data

@@ -12,12 +12,45 @@ import {
   CardMedia,
   Avatar,
 } from '@mui/material';
+import { createConnection } from '@/lib/db';
+import { isSessionExpired, isSessionInactive } from '@/lib/session';
+
+async function validateSession(sessionToken) {
+  const connection = await createConnection();
+  try {
+    const [sessions] = await connection.execute(
+      `SELECT s.expires_at, s.last_activity
+       FROM user_sessions s
+       WHERE s.session_token = ?`,
+      [sessionToken]
+    );
+
+    if (sessions.length === 0) return false;
+
+    const session = sessions[0];
+    if (isSessionExpired(session.expires_at) || isSessionInactive(session.last_activity)) {
+      await connection.execute(
+        'DELETE FROM user_sessions WHERE session_token = ?',
+        [sessionToken]
+      );
+      return false;
+    }
+
+    await connection.execute(
+      'UPDATE user_sessions SET last_activity = NOW() WHERE session_token = ?',
+      [sessionToken]
+    );
+    return true;
+  } finally {
+    connection.release();
+  }
+}
 
 export default async function BlogListPage() {
   const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("sessionToken");
+  const sessionToken = cookieStore.get("sessionToken")?.value;
 
-  if (!sessionToken) {
+  if (!sessionToken || !(await validateSession(sessionToken))) {
     redirect("/login");
   }
 

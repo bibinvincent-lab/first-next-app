@@ -17,9 +17,11 @@ CREATE TABLE IF NOT EXISTS rate_limit_logs (
 ALTER TABLE user_sessions 
 ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45) AFTER session_token,
 ADD COLUMN IF NOT EXISTS user_agent TEXT AFTER ip_address,
-ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER last_activity,
-ADD COLUMN IF NOT INDEX idx_ip_address (ip_address),
-ADD COLUMN IF NOT INDEX idx_created_at (created_at);
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER last_activity;
+
+ALTER TABLE user_sessions
+ADD INDEX IF NOT EXISTS idx_ip_address (ip_address),
+ADD INDEX IF NOT EXISTS idx_created_at (created_at);
 
 -- Add failed login attempts tracking
 CREATE TABLE IF NOT EXISTS failed_login_attempts (
@@ -52,26 +54,30 @@ CREATE TABLE IF NOT EXISTS security_audit_log (
 
 -- Enhance users table with security fields
 ALTER TABLE users 
-ADD COLUMN IF NOT COLUMN last_login TIMESTAMP NULL AFTER role,
-ADD COLUMN IF NOT COLUMN login_attempts INT DEFAULT 0 AFTER last_login,
-ADD COLUMN IF NOT COLUMN locked_until TIMESTAMP NULL AFTER login_attempts,
-ADD COLUMN IF NOT COLUMN password_changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER locked_until,
-ADD COLUMN IF NOT COLUMN two_factor_enabled BOOLEAN DEFAULT FALSE AFTER password_changed_at,
-ADD COLUMN IF NOT COLUMN email_verified BOOLEAN DEFAULT FALSE AFTER two_factor_enabled,
-ADD COLUMN IF NOT COLUMN email_verification_token VARCHAR(255) NULL AFTER email_verified,
-ADD COLUMN IF NOT COLUMN password_reset_token VARCHAR(255) NULL AFTER email_verification_token,
-ADD COLUMN IF NOT COLUMN password_reset_expires TIMESTAMP NULL AFTER password_reset_token,
-ADD COLUMN IF NOT INDEX idx_locked_until (locked_until),
-ADD COLUMN IF NOT INDEX idx_email_verification_token (email_verification_token),
-ADD COLUMN IF NOT INDEX idx_password_reset_token (password_reset_token);
+ADD COLUMN IF NOT EXISTS last_login TIMESTAMP NULL AFTER role,
+ADD COLUMN IF NOT EXISTS login_attempts INT DEFAULT 0 AFTER last_login,
+ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP NULL AFTER login_attempts,
+ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER locked_until,
+ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN DEFAULT FALSE AFTER password_changed_at,
+ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE AFTER two_factor_enabled,
+ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255) NULL AFTER email_verified,
+ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255) NULL AFTER email_verification_token,
+ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP NULL AFTER password_reset_token;
+
+ALTER TABLE users
+ADD INDEX IF NOT EXISTS idx_locked_until (locked_until),
+ADD INDEX IF NOT EXISTS idx_email_verification_token (email_verification_token),
+ADD INDEX IF NOT EXISTS idx_password_reset_token (password_reset_token);
 
 -- Add session management improvements
 ALTER TABLE user_sessions 
-ADD COLUMN IF NOT COLUMN device_fingerprint VARCHAR(255) AFTER user_agent,
-ADD COLUMN IF NOT COLUMN is_active BOOLEAN DEFAULT TRUE AFTER device_fingerprint,
-ADD COLUMN IF NOT COLUMN logout_reason ENUM('manual', 'expired', 'forced', 'security_breach') NULL AFTER is_active,
-ADD COLUMN IF NOT INDEX idx_device_fingerprint (device_fingerprint),
-ADD COLUMN IF NOT INDEX idx_is_active (is_active);
+ADD COLUMN IF NOT EXISTS device_fingerprint VARCHAR(255) AFTER user_agent,
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE AFTER device_fingerprint,
+ADD COLUMN IF NOT EXISTS logout_reason ENUM('manual', 'expired', 'forced', 'security_breach') NULL AFTER is_active;
+
+ALTER TABLE user_sessions
+ADD INDEX IF NOT EXISTS idx_device_fingerprint (device_fingerprint),
+ADD INDEX IF NOT EXISTS idx_is_active (is_active);
 
 -- Create user_devices table for device management
 CREATE TABLE IF NOT EXISTS user_devices (
